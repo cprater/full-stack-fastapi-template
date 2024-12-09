@@ -1,7 +1,7 @@
 import uuid
 
 from pydantic import EmailStr
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Relationship, SQLModel, Optional
 
 
 # Shared properties
@@ -112,3 +112,30 @@ class TokenPayload(SQLModel):
 class NewPassword(SQLModel):
     token: str
     new_password: str = Field(min_length=8, max_length=40)
+
+# -----------------------------------------------------------------------------------------
+class Board(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    # owner_id: uuid.UUID
+    theme: str = Field(default="default", max_length=255)
+    lanes: list["Lane"] = Relationship(back_populates="board", cascade_delete=True)
+
+class BoardCreate(Board):
+    theme: str
+
+class BoardPublic(Board):
+    id: uuid.UUID
+    theme: str
+
+class Lane(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    title: str = Field(default="Title", max_length=80)
+    board: Board = Optional(Relationship(back_populates="lanes"))
+    board_id: uuid.UUID = Optional(Field(foreign_key="board.id"))
+
+# class BoardLane(SQLModel):
+#     name: str
+#     # items: list[BoardLaneItems]
+
+# class BoardLaneItems(SQLModel):
+#     content: str
